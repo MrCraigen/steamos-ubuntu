@@ -11,7 +11,7 @@ export STEAM_USER
 
 # Configure the default versions of the SteamOS packages to use. These generally
 # don't ever need to be overridden.
-STEAMOS_COMPOSITOR_VER="${STEAMOS_COMPOSITOR_VER:-1.34+bsos1_amd64}"
+STEAMOS_COMPOSITOR_VER="${STEAMOS_COMPOSITOR_VER:-1.35+bsos1_amd64}"
 STEAMOS_MODESWITCH_VER="${STEAMOS_MODESWITCH_VER:-1.10+bsos1_amd64}"
 STEAMOS_PLYMOUTH_VER="${STEAMOS_PLYMOUTH_VER:-0.17+bsos2_all}"
 
@@ -24,13 +24,39 @@ fi
 # Confirm from the user that it's OK to continue
 if [[ "${NON_INTERACTIVE}" != "true" ]]; then
 	echo "This script will configure a SteamOS-like experience on Ubuntu."
-	read -p "Do you want to continue? [Yy]" -n 1 -r
+	read -p "Do you want to continue? [Yy] " -n 1 -r
 	echo
 	if [[ $REPLY =~ ^[Yy]$ ]]; then
 		echo "Starting installation..."
 	else
 		echo "Aborting installation."
 		exit
+	fi
+fi
+
+# Adding a question about setting the default user just in case it wasn't 
+# set as an environment variable.
+if [[ "${NON_INTERACTIVE}" != "true" ]]; then
+	read -p "Do you want to change the default user? [Yy] " -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]$ ]]; then
+		read -p "What name should the default user be? " -r
+		echo
+		if [[ "$REPLY" != "" ]]; then
+			STEAM_USER="$REPLY"
+			echo "Default user is setting to '$STEAM_USER'"
+			read -p "Is that correct? [Yy] " -n 1 -r
+			echo
+			if [[ $REPLY =~ ^[Yy]$ ]]; then
+				echo "Starting installation..."
+				export STEAM_USER
+			else
+				echo "Aborting installation."
+				exit
+			fi
+		fi
+	else
+		echo "Continuing installation."
 	fi
 fi
 
@@ -52,19 +78,19 @@ echo "3) Intel"
 read case;
 
 case $case in
-    1)  echo "Getting Latest Graphic Drivers..."
-        add-apt-repository ppa:graphics-drivers/ppa
-        apt update
-        apt install nvidia-driver-396 -y;;
-    2)  echo "Getting Latest AMD Graphic Drivers..."
-        add-apt-repository ppa:oibaf/graphics-drivers
-        apt update
-        apt apt -y upgrade;;
-    3)  echo "Getting Latest Intel Graphic Drivers..."
-        add-apt-repository ppa:paulo-miguel-dias/pkppa
-        apt update
-        apt dist-upgrade
-        apt install mesa-vulkan-drivers mesa-vulkan-drivers:i386 -y;;
+	1)	echo "Getting Latest Graphic Drivers..."
+		add-apt-repository ppa:graphics-drivers/ppa
+		apt update
+		apt install nvidia-driver-415 -y;;
+	2)	echo "Getting Latest AMD Graphic Drivers..."
+		add-apt-repository ppa:oibaf/graphics-drivers
+		apt update
+		apt apt -y upgrade;;
+	3)	echo "Getting Latest Intel Graphic Drivers..."
+		add-apt-repository ppa:paulo-miguel-dias/pkppa
+		apt update
+		apt dist-upgrade
+		apt install mesa-vulkan-drivers mesa-vulkan-drivers:i386 -y;;
 esac 
 
 # Install steam and steam device support.
@@ -74,18 +100,18 @@ apt install steam steam-devices -y
 
 # WIP - find a way to enable Steamplay without using Desktop Steam Client. Also maybe find a way to enable Steam Beta with latest Steamplay
 # Enable SteamPlay
-echo "Enable Steamplay..."
+#echo "Enable Steamplay..."
 
 # Enable Protonfix for ease of use with certain games that needs tweaking.
 # https://github.com/simons-public/protonfixes
 # Installing Protonfix for ease of use
 if [[ "${INCLUDE_PROTONFIX}" == "true" ]]; then
-    echo "Installing protonfix..."    
-    pip3 install protonfixes
-    # Installing cefpython3 for visual progress bar
-    pip install cefpython3
-
-    # Edit Proton * user_settings.py
+	apt install python-pip python3-pip -y
+	echo "Installing protonfix..."    
+	pip3 install protonfixes --upgrade
+	# Installing cefpython3 for visual progress bar
+	pip install cefpython3
+	# Edit Proton * user_settings.py
 fi
 
 # Install a terminal emulator that can be added from Big Picture Mode.
@@ -118,6 +144,10 @@ envsubst < ./conf/reboot-to-desktop-mode.sh > /usr/local/sbin/reboot-to-desktop-
 envsubst < ./conf/reboot-to-steamos-mode.sh > /usr/local/sbin/reboot-to-steamos-mode
 chmod +x /usr/local/sbin/reboot-to-desktop-mode
 chmod +x /usr/local/sbin/reboot-to-steamos-mode
+echo "Adding scripts to sudoers directory in case you want a password."
+echo "You will still need your user as admin to use sudo"
+cp ./conf/steamos-reboot.sh /etc/sudoers.d/steamos-reboot
+chmod 440 /etc/sudoers.d/steamos-reboot
 
 # Install the steamos compositor, modeswitch, and themes
 echo "Configuring the SteamOS boot themes..."
