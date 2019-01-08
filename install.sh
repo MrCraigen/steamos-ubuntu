@@ -7,6 +7,8 @@ INCLUDE_SAKURA="${INCLUDE_SAKURA:-true}"
 INCLUDE_PROTONFIX="${INCLUDE_PROTONFIX:-false}"
 INCLUDE_GPU_DRIVERS="${INCLUDE_GPU_DRIVERS:-true}"
 GPU_TYPE="${GPU_TYPE:-auto}"
+PROTON_VERSION="${PROTON_VERSION:-none}"
+WHITELIST_ONLY="${WHITELIST_ONLY:-true}"
 NON_INTERACTIVE="${NON_INTERACTIVE:-false}"
 STEAM_USER="${STEAM_USER:-steam}"
 export STEAM_USER
@@ -26,12 +28,14 @@ fi
 # Confirm from the user that it's OK to continue
 if [[ "${NON_INTERACTIVE}" != "true" ]]; then
 	echo "Options:"
-	echo "  OpenSSH:      ${INCLUDE_OPENSSH}"
-	echo "  Terminal:     ${INCLUDE_SAKURA}"
-	echo "  Proton Fixes: ${INCLUDE_PROTONFIX}"
-	echo "  GPU Drivers:  ${INCLUDE_GPU_DRIVERS}"
-	echo "    GPU Type:   ${GPU_TYPE}"
-	echo "  Steam User:   ${STEAM_USER}"
+	echo "  OpenSSH:                ${INCLUDE_OPENSSH}"
+	echo "  Terminal:               ${INCLUDE_SAKURA}"
+	echo "  Proton Beta:            ${INCLUDE_PROTON}"
+	echo "  Proton Fixes:           ${INCLUDE_PROTONFIX}"
+	echo "  GPU Drivers:            ${INCLUDE_GPU_DRIVERS}"
+	echo "  GPU Type:               ${GPU_TYPE}"
+	echo "  Whitelised games only:  ${WHITELIST_ONLY}"
+	echo "  Steam User:             ${STEAM_USER}"
 	echo ""
 	echo "This script will configure a SteamOS-like experience on Ubuntu."
 	read -p "Do you want to continue? [Yy] " -n 1 -r
@@ -117,20 +121,48 @@ echo "Installing steam..."
 apt update
 apt install steam steam-devices -y
 
-# WIP - find a way to enable Steamplay without using Desktop Steam Client. Also maybe find a way to enable Steam Beta with latest Steamplay
 # Enable SteamPlay
-#echo "Enable Steamplay..."
+
+echo "Enable Steamplay..."
+sed -i 's/\("enable"\).*/\1 "1"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+echo "Choose Steamplay version:"
+echo "1) Proton 3.7 (Recommended)"
+echo "2) Proton 3.7 Beta"
+echo "1) Proton 3.16"
+echo "2) Proton 3.16 Beta"
+read case;
+
+case $case in
+	1)
+		PROTON_VERSION="Proton 3.7"
+		sed -i 's/\("name"\).*/\1 "proton_37"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	2)
+		PROTON_VERSION="Proton 3.7 Beta"
+		sed -i 's/\("name"\).*/\1 "proton_37_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	3)
+		PROTON_VERSION="Proton 3.16"
+		sed -i 's/\("name"\).*/\1 "proton_316"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	4)
+		PROTON_VERSION="Proton 3.16 Beta"
+		sed -i 's/\("name"\).*/\1 "proton_316_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+esac
+
+# Set Whitelist only game as default for new players
+if [[ "${WHITELIST_ONLY}" == "false" ]]; then
+	sed -i 's/\("Priority"\).*/\1 "250"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+fi
 
 # Enable Protonfix for ease of use with certain games that needs tweaking.
 # https://github.com/simons-public/protonfixes
 # Installing Protonfix for ease of use
 if [[ "${INCLUDE_PROTONFIX}" == "true" ]]; then
-	apt install python-pip python3-pip -y
+	apt install python-pip python3-pip winetricks zenity -y
 	echo "Installing protonfix..."    
 	pip3 install protonfixes --upgrade
 	# Installing cefpython3 for visual progress bar
 	pip install cefpython3
-	# Edit Proton * user_settings.py
+	# Enable Protonfix
+	echo "import protonfixes" | tee -a /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/user_settings.py
 fi
 
 # Install a terminal emulator that can be added from Big Picture Mode.
