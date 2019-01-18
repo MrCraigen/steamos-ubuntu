@@ -8,7 +8,6 @@ INCLUDE_PROTONFIX="${INCLUDE_PROTONFIX:-false}"
 INCLUDE_GPU_DRIVERS="${INCLUDE_GPU_DRIVERS:-true}"
 GPU_TYPE="${GPU_TYPE:-auto}"
 PROTON_VERSION="${PROTON_VERSION:-none}"
-WHITELIST_ONLY="${WHITELIST_ONLY:-true}"
 NON_INTERACTIVE="${NON_INTERACTIVE:-false}"
 STEAM_USER="${STEAM_USER:-steam}"
 export STEAM_USER
@@ -34,7 +33,6 @@ if [[ "${NON_INTERACTIVE}" != "true" ]]; then
 	echo "  Proton Fixes:           ${INCLUDE_PROTONFIX}"
 	echo "  GPU Drivers:            ${INCLUDE_GPU_DRIVERS}"
 	echo "  GPU Type:               ${GPU_TYPE}"
-	echo "  Whitelised games only:  ${WHITELIST_ONLY}"
 	echo "  Steam User:             ${STEAM_USER}"
 	echo ""
 	echo "This script will configure a SteamOS-like experience on Ubuntu."
@@ -146,11 +144,6 @@ case $case in
 		PROTON_VERSION="Proton 3.16 Beta"
 		sed -i 's/\("name"\).*/\1 "proton_316_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
 esac
-
-# Set Whitelist only game as default for new players
-if [[ "${WHITELIST_ONLY}" == "false" ]]; then
-	sed -i 's/\("Priority"\).*/\1 "250"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
-fi
 
 # Enable Protonfix for ease of use with certain games that needs tweaking.
 # https://github.com/simons-public/protonfixes

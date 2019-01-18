@@ -67,7 +67,6 @@ Here is the list of all the available installation options:
 | `INCLUDE_PROTONFIX`  | false   | Whether or not to install Protonfix                        |
 | `INCLUDE_GPU_DRIVERS`| true    | Whether or not to install the latest GPU drivers           |
 | `GPU_TYPE`           | auto    | GPU drivers to install. Can be: auto, nvidia, amd, intel   |
-| `WHITELIST_ONLY`	   | true    | Whether or not to set Whitelisted games only               |
 | `NON_INTERACTIVE`    | false   | Whether or not to prompt the user during install           |
 | `STEAM_USER`         | steam   | The username of the account to autologin as                |
 
