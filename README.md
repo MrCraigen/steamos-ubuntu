@@ -21,7 +21,7 @@ Ubuntu 18.04 desktop.
 
 ## Requirements
 In order to install SteamOS Ubuntu, you should have a fresh installation of
-Ubuntu 18.04 Desktop installed. Other versions may work, but have not been 
+Ubuntu 18.04 Desktop installed. Other versions may work, but have not been
 tested.
 
 ## Installation
@@ -54,6 +54,7 @@ Here is the list of all the available installation options:
 | `INCLUDE_OPENSSH`    | true    | Whether or not OpenSSH server should be installed          |
 | `INCLUDE_SAKURA`     | true    | Whether or not to install a terminal emulator              |
 | `INCLUDE_PROTONFIX`  | false   | Whether or not to install Protonfix                        |
+| `INCLUDE_DOSBOX`     | false   | Whether or not to install steam-dos                        |
 | `INCLUDE_GPU_DRIVERS`| true    | Whether or not to install the latest GPU drivers           |
 | `GPU_TYPE`           | auto    | GPU drivers to install. Can be: auto, nvidia, amd, intel   |
 | `NON_INTERACTIVE`    | false   | Whether or not to prompt the user during install           |
@@ -65,7 +66,7 @@ Here is the list of all the available installation options:
 
 After installation, there will not be an easy way to switch between a regular
 Gnome desktop session and Steam. In order to make it easier to switch between
-the two, there are two commands that are installed that will let you switch 
+the two, there are two commands that are installed that will let you switch
 between the two:
 
 * `reboot-to-desktop-mode` - sets gnome as the default session and reboots
@@ -75,7 +76,7 @@ You can access the terminal from Steam by adding a local shortcut for `Sakura`.
 
 ### Some games aren't launching correctly in SteamOS mode
 When using the SteamOS compositor, some games start behind the big picture UI and
-no graphics are displayed. The `steamos-fg` script forces such games to be shown 
+no graphics are displayed. The `steamos-fg` script forces such games to be shown
 in the foreground.
 
 Affected games this script fixes include:
@@ -86,7 +87,7 @@ Affected games this script fixes include:
     The Count Lucanor
     Mad Max
 
-To fix this, add `steamos-fg %command%` to the launch options for each game you 
+To fix this, add `steamos-fg %command%` to the launch options for each game you
 wish to use this script with.
 
 ## Attributions
