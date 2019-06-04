@@ -46,6 +46,14 @@ if [[ "${NON_INTERACTIVE}" != "true" ]]; then
 	fi
 fi
 
+# Download the packages we need. If we fail at downloading, stop the script.
+set -e
+echo "Downloading SteamOS packages..."
+wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-compositor/steamos-compositor_${STEAMOS_COMPOSITOR_VER}.deb"
+wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-modeswitch-inhibitor/steamos-modeswitch-inhibitor_${STEAMOS_MODESWITCH_VER}.deb"
+wget "http://repo.steamstatic.com/steamos/pool/main/p/plymouth-themes-steamos/plymouth-themes-steamos_${STEAMOS_PLYMOUTH_VER}.deb"
+set +e
+
 # See if there is a 'steam' user account. If not, create it.
 if ! grep "^${STEAM_USER}" /etc/passwd > /dev/null; then
 	echo "Steam user '${STEAM_USER}' not found. Creating it..."
@@ -117,7 +125,7 @@ fi
 # Install steam and steam device support.
 echo "Installing steam..."
 apt update
-apt install steam steam-devices -y
+apt install steam steam-devices x11-utils -y
 
 # Enable SteamPlay
 
@@ -170,14 +178,6 @@ if [[ "${INCLUDE_OPENSSH}" == "true" ]]; then
 	apt install openssh-server -y
 fi
 
-# Download the packages we need. If we fail at downloading, stop the script.
-set -e
-echo "Downloading SteamOS packages..."
-wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-compositor/steamos-compositor_${STEAMOS_COMPOSITOR_VER}.deb"
-wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-modeswitch-inhibitor/steamos-modeswitch-inhibitor_${STEAMOS_MODESWITCH_VER}.deb"
-wget "http://repo.steamstatic.com/steamos/pool/main/p/plymouth-themes-steamos/plymouth-themes-steamos_${STEAMOS_PLYMOUTH_VER}.deb"
-set +e
-
 # Enable automatic login. We use 'envsubst' to replace the user with ${STEAM_USER}.
 echo "Enabling automatic login..."
 envsubst < ./conf/custom.conf > /etc/gdm3/custom.conf
@@ -188,6 +188,10 @@ envsubst < ./conf/reboot-to-desktop-mode.sh > /usr/local/sbin/reboot-to-desktop-
 envsubst < ./conf/reboot-to-steamos-mode.sh > /usr/local/sbin/reboot-to-steamos-mode
 chmod +x /usr/local/sbin/reboot-to-desktop-mode
 chmod +x /usr/local/sbin/reboot-to-steamos-mode
+
+# Create the "steamos-fg" script as a workaround for games like Deadcells with the Steam compositor.
+cp ./conf/steamos-fg.sh /usr/local/sbin/steamos-fg
+chmod +x /usr/local/sbin/steamos-fg
 
 # Create a sudoers rule to allow passwordless reboots between sessions.
 echo "Creating sudoers rules to allow rebooting between sessions..."
