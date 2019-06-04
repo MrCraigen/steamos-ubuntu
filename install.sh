@@ -5,6 +5,7 @@
 INCLUDE_OPENSSH="${INCLUDE_OPENSSH:-true}"
 INCLUDE_SAKURA="${INCLUDE_SAKURA:-true}"
 INCLUDE_PROTONFIX="${INCLUDE_PROTONFIX:-false}"
+INCLUDE_DOSBOX="${INCLUDE_DOSBOX:-false}"
 INCLUDE_GPU_DRIVERS="${INCLUDE_GPU_DRIVERS:-true}"
 GPU_TYPE="${GPU_TYPE:-auto}"
 PROTON_VERSION="${PROTON_VERSION:-none}"
@@ -31,6 +32,7 @@ if [[ "${NON_INTERACTIVE}" != "true" ]]; then
 	echo "  Terminal:               ${INCLUDE_SAKURA}"
 	echo "  Proton Beta:            ${INCLUDE_PROTON}"
 	echo "  Proton Fixes:           ${INCLUDE_PROTONFIX}"
+	echo "  Dosbox:          				${INCLUDE_DOSBOX}"
 	echo "  GPU Drivers:            ${INCLUDE_GPU_DRIVERS}"
 	echo "  GPU Type:               ${GPU_TYPE}"
 	echo "  Steam User:             ${STEAM_USER}"
@@ -84,7 +86,7 @@ if [[ "${INCLUDE_GPU_DRIVERS}" == "true" ]]; then
 			echo "  Unable to determine GPU. Skipping driver install."
 		fi
 	fi
-	
+
 	# Install the GPU drivers.
 	case "${GPU_TYPE}" in
 		nvidia)
@@ -98,7 +100,7 @@ if [[ "${INCLUDE_GPU_DRIVERS}" == "true" ]]; then
 			add-apt-repository ppa:oibaf/graphics-drivers -y
 			apt update
 			apt dist-upgrade -y
-	
+
 			dpkg --add-architecture i386
 			apt update
 			apt install mesa-vulkan-drivers mesa-vulkan-drivers:i386 -y
@@ -108,7 +110,7 @@ if [[ "${INCLUDE_GPU_DRIVERS}" == "true" ]]; then
 			add-apt-repository ppa:paulo-miguel-dias/pkppa -y
 			apt update
 			apt dist-upgrade -y
-	
+
 			dpkg --add-architecture i386
 			apt update
 			apt install mesa-vulkan-drivers mesa-vulkan-drivers:i386 -y
@@ -158,12 +160,21 @@ esac
 # Installing Protonfix for ease of use
 if [[ "${INCLUDE_PROTONFIX}" == "true" ]]; then
 	apt install python-pip python3-pip winetricks zenity -y
-	echo "Installing protonfix..."    
+	echo "Installing protonfix..."
 	pip3 install protonfixes --upgrade
 	# Installing cefpython3 for visual progress bar
 	pip install cefpython3
 	# Enable Protonfix
 	echo "import protonfixes" | tee -a /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/user_settings.py
+fi
+
+# Enable DOS Support for older games with Dosbox through SteamPlay
+# https://github.com/dreamer/steam-dos
+if [[ "${INCLUDE_DOSBOX}" == "true" ]]; then
+	apt install dosbox inotify-tools timidity fluid-soundfont-gm -y
+	echo "Installing Dosbox..."
+	cd ~/.local/share/Steam/compatibilitytools.d/ || cd ~/.steam/root/compatibilitytools.d/
+	curl -L https://github.com/dreamer/steam-dos/releases/download/v0.2.1/steam-dos-0.2.tar.xz | tar xJf -
 fi
 
 # Install a terminal emulator that can be added from Big Picture Mode.
