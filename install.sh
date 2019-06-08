@@ -218,18 +218,23 @@ case $case in
 	1)
 		PROTON_VERSION="Proton 3.7"
 		sed -i 's/\("name"\).*/\1 "proton_37"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+		;;
 	2)
 		PROTON_VERSION="Proton 3.7 Beta"
 		sed -i 's/\("name"\).*/\1 "proton_37_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+		;;
 	3)
 		PROTON_VERSION="Proton 3.16"
 		sed -i 's/\("name"\).*/\1 "proton_316"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+		;;
 	4)
 		PROTON_VERSION="Proton 3.16 Beta"
 		sed -i 's/\("name"\).*/\1 "proton_316_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+		;;
 	5)
 		PROTON_VERSION="Proton 4.2"
 		sed -i 's/\("name"\).*/\1 "proton_42"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+		;;
 esac
 
 
