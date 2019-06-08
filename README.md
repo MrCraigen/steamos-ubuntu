@@ -4,6 +4,8 @@
 
 SteamOS Ubuntu is a set of scripts to create an Ubuntu-based Steam machine.
 
+This is fork to make a more minimal installtion of SteamOS Ubuntu, using openbox as a base DM.
+
 It will do the following:
 
 * Create the `steam` user account if it does not exist.
@@ -55,6 +57,7 @@ Here is the list of all the available installation options:
 | `INCLUDE_SAKURA`     | true    | Whether or not to install a terminal emulator              |
 | `INCLUDE_PROTONFIX`  | false   | Whether or not to install Protonfix                        |
 | `INCLUDE_DOSBOX`     | false   | Whether or not to install steam-dos                        |
+| `INCLUDE_D9VK`       | false   | Whether or not to install d9vk                             |
 | `INCLUDE_GPU_DRIVERS`| true    | Whether or not to install the latest GPU drivers           |
 | `GPU_TYPE`           | auto    | GPU drivers to install. Can be: auto, nvidia, amd, intel   |
 | `NON_INTERACTIVE`    | false   | Whether or not to prompt the user during install           |
@@ -92,6 +95,9 @@ wish to use this script with.
 
 ## Attributions
 * Alkazar for [steamos-fg](https://github.com/alkazar/steamos-fg)
+* dreamer for [steam-dos](https://github.com/dreamer/steam-dos)
+* Joshua Ashton for [d9vk](https://github.com/Joshua-Ashton/d9vk)
+* Simons for [protonfixes](https://github.com/simons-public/protonfixes/)
 
 ## Legal
 The Steam logo and Ubuntu logo are registered trademarks of Valve Corporation

@@ -6,6 +6,7 @@ INCLUDE_OPENSSH="${INCLUDE_OPENSSH:-true}"
 INCLUDE_SAKURA="${INCLUDE_SAKURA:-true}"
 INCLUDE_PROTONFIX="${INCLUDE_PROTONFIX:-false}"
 INCLUDE_DOSBOX="${INCLUDE_DOSBOX:-false}"
+INCLUDE_D9VK="${INCLUDE_D9VK:-false}"
 INCLUDE_GPU_DRIVERS="${INCLUDE_GPU_DRIVERS:-true}"
 GPU_TYPE="${GPU_TYPE:-auto}"
 PROTON_VERSION="${PROTON_VERSION:-none}"
@@ -18,6 +19,7 @@ export STEAM_USER
 STEAMOS_COMPOSITOR_VER="${STEAMOS_COMPOSITOR_VER:-1.35+bsos1_amd64}"
 STEAMOS_MODESWITCH_VER="${STEAMOS_MODESWITCH_VER:-1.10+bsos1_amd64}"
 STEAMOS_PLYMOUTH_VER="${STEAMOS_PLYMOUTH_VER:-0.17+bsos2_all}"
+STEAMOS_ALIENWAREWMI_VER="${STEAMOS_ALIENWAREWMI_VER:-2.58}"
 
 # Ensure the script is being run as root
 if [ "$EUID" -ne 0 ]; then
@@ -30,9 +32,9 @@ if [[ "${NON_INTERACTIVE}" != "true" ]]; then
 	echo "Options:"
 	echo "  OpenSSH:                ${INCLUDE_OPENSSH}"
 	echo "  Terminal:               ${INCLUDE_SAKURA}"
-	echo "  Proton Beta:            ${INCLUDE_PROTON}"
 	echo "  Proton Fixes:           ${INCLUDE_PROTONFIX}"
 	echo "  Dosbox:          				${INCLUDE_DOSBOX}"
+	echo "  d9vk Support:          	${INCLUDE_D9VK}"
 	echo "  GPU Drivers:            ${INCLUDE_GPU_DRIVERS}"
 	echo "  GPU Type:               ${GPU_TYPE}"
 	echo "  Steam User:             ${STEAM_USER}"
@@ -54,6 +56,7 @@ echo "Downloading SteamOS packages..."
 wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-compositor/steamos-compositor_${STEAMOS_COMPOSITOR_VER}.deb"
 wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-modeswitch-inhibitor/steamos-modeswitch-inhibitor_${STEAMOS_MODESWITCH_VER}.deb"
 wget "http://repo.steamstatic.com/steamos/pool/main/p/plymouth-themes-steamos/plymouth-themes-steamos_${STEAMOS_PLYMOUTH_VER}.deb"
+wget "http://repo.steamstatic.com/steamos/pool/main/s/steamos-base-files/steamos-base-files_${STEAMOS_ALIENWAREWMI_VER}.tar.xz"
 set +e
 
 # See if there is a 'steam' user account. If not, create it.
@@ -129,52 +132,22 @@ echo "Installing steam..."
 apt update
 apt install steam steam-devices x11-utils -y
 
-# Enable SteamPlay
-
-echo "Enable Steamplay..."
-sed -i 's/\("enable"\).*/\1 "1"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
-echo "Choose Steamplay version:"
-echo "1) Proton 3.7 (Recommended)"
-echo "2) Proton 3.7 Beta"
-echo "1) Proton 3.16"
-echo "2) Proton 3.16 Beta"
-read case;
-
-case $case in
-	1)
-		PROTON_VERSION="Proton 3.7"
-		sed -i 's/\("name"\).*/\1 "proton_37"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
-	2)
-		PROTON_VERSION="Proton 3.7 Beta"
-		sed -i 's/\("name"\).*/\1 "proton_37_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
-	3)
-		PROTON_VERSION="Proton 3.16"
-		sed -i 's/\("name"\).*/\1 "proton_316"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
-	4)
-		PROTON_VERSION="Proton 3.16 Beta"
-		sed -i 's/\("name"\).*/\1 "proton_316_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
-esac
-
 # Enable Protonfix for ease of use with certain games that needs tweaking.
 # https://github.com/simons-public/protonfixes
 # Installing Protonfix for ease of use
 if [[ "${INCLUDE_PROTONFIX}" == "true" ]]; then
 	apt install python-pip python3-pip winetricks zenity -y
 	echo "Installing protonfix..."
-	pip3 install protonfixes --upgrade
+	sudo pip3 install git+https://github.com/simons-public/protonfixes@master
 	# Installing cefpython3 for visual progress bar
 	pip install cefpython3
-	# Enable Protonfix
-	echo "import protonfixes" | tee -a /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/user_settings.py
 fi
 
 # Enable DOS Support for older games with Dosbox through SteamPlay
 # https://github.com/dreamer/steam-dos
 if [[ "${INCLUDE_DOSBOX}" == "true" ]]; then
-	apt install dosbox inotify-tools timidity fluid-soundfont-gm -y
 	echo "Installing Dosbox..."
-	cd ~/.local/share/Steam/compatibilitytools.d/ || cd ~/.steam/root/compatibilitytools.d/
-	curl -L https://github.com/dreamer/steam-dos/releases/download/v0.2.1/steam-dos-0.2.tar.xz | tar xJf -
+	apt install dosbox inotify-tools timidity fluid-soundfont-gm -y
 fi
 
 # Install a terminal emulator that can be added from Big Picture Mode.
@@ -223,6 +196,62 @@ update-grub
 # Set the X session to use the installed steamos session
 echo "Configuring the default session..."
 cp ./conf/steam-session.conf "/var/lib/AccountsService/users/${STEAM_USER}"
+
+# WIP - find a way to enable Steamplay without using Desktop Steam Client. Also maybe find a way to enable Steam Beta with latest Steamplay
+# Enable SteamPlay
+echo "Enable Steamplay..."
+echo "Starting Steam to create initial configurations."
+echo "Close steam to continue."
+sudo STEAM_USER=${STEAM_USER} ./run_steam.sh
+
+echo "Set Steamplay (Proton) version..."
+sed -i 's/\("enable"\).*/\1 "1"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+echo "Choose Steamplay version:"
+echo "1) Proton 3.7"
+echo "2) Proton 3.7 Beta"
+echo "3) Proton 3.16"
+echo "4) Proton 3.16 Beta"
+echo "5) Proton 4.2 (Recommended)"
+read case;
+
+case $case in
+	1)
+		PROTON_VERSION="Proton 3.7"
+		sed -i 's/\("name"\).*/\1 "proton_37"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	2)
+		PROTON_VERSION="Proton 3.7 Beta"
+		sed -i 's/\("name"\).*/\1 "proton_37_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	3)
+		PROTON_VERSION="Proton 3.16"
+		sed -i 's/\("name"\).*/\1 "proton_316"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	4)
+		PROTON_VERSION="Proton 3.16 Beta"
+		sed -i 's/\("name"\).*/\1 "proton_316_beta"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+	5)
+		PROTON_VERSION="Proton 4.2"
+		sed -i 's/\("name"\).*/\1 "proton_42"/' /home/${STEAM_USER}/.steam/steam/config/config.vdf
+esac
+
+
+if [[ "${INCLUDE_PROTONFIX}" == "true" ]]; then
+	# Enable Protonfix
+	echo "import protonfixes" | tee -a /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/user_settings.py
+fi
+
+if [[ "${INCLUDE_D9VK}" == "true" ]]; then
+	# Enable d9vk
+	cd /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/dist/
+	# Downloading latest alpha release
+	wget https://github.com/Joshua-Ashton/d9vk/releases/download/0.12/d9vk-0.12.tar.gz
+	tar -zxvf d9vk-0.12.tar.gz root/x32/ -C /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/dist/lib/wine/dxvk/
+	tar -zxvf d9vk-0.12.tar.gz root/x64/ -C /home/${STEAM_USER}/.steam/steam/steamapps/common/${PROTON_VERSION}/dist/lib64/wine/dxvk/
+fi
+
+if [[ "${INCLUDE_DOSBOX}" == "true" ]]; then
+	# Add steam-dos as a Proton version
+	cd /home/${STEAM_USER}/.steam/root/compatibilitytools.d/
+	curl -L https://github.com/dreamer/steam-dos/releases/download/v0.3.0/steam-dos.tar.xz | tar xJf -
+fi
 
 echo ""
 echo "Installation complete! Press ENTER to reboot or CTRL+C to exit"
